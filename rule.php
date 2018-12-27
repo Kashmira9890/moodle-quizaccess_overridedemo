@@ -41,8 +41,6 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
  */
 class quizaccess_overridedemo extends quiz_access_rule_base {
     
-//     protected static $c = 1;
-
     public static function make(quiz $quizobj, $timenow, $canignoretimelimits) {
         if (empty($quizobj->get_quiz()->odrequired)) {
             return null;
@@ -62,7 +60,7 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
         $quizid     = $this->quizobj->get_quizid();
         $cmid       = $this->quizobj->get_cmid();
         
-        echo '<br><br><br>-----------------<br>';
+        echo '<br><br><br>============== overridedemo ================<br>';
 //         print_object($this);
 //         $var = $userid . '_od';
 // //         $_SESSION[$var] = 0;
@@ -75,8 +73,7 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
 //                 print_object($unfinishedattempt);
                 $unfinishedattemptid = $unfinishedattempt->id;
                 $unfinished = $unfinishedattempt->state == quiz_attempt::IN_PROGRESS;
-                
-                
+                                
 //                 $script = " <script>
 //     			            function findButtonText() {
 //     					        $(document).ready(function() {
@@ -95,74 +92,8 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
                 }
             }
 //         }
-        
     }
-    
-    public function is_preflight_check_required($attemptid) {
-        
-//         global $CFG, $PAGE, $DB, $USER;
-//         echo '<br><br><br> In pre-flight <br>';
-        
-//         // User details.
-//         $sessionkey = sesskey();
-//         $userid     = $USER->id;
-//         $username   = $USER->username;
-        
-//         $quiz       = $this->quizobj->get_quiz();
-//         $quizid     = $this->quizobj->get_quizid();
-//         $cmid       = $this->quizobj->get_cmid();
-        
-        
-//         if ($unfinishedattempt = quiz_get_user_attempt_unfinished($quiz->id, $USER->id)) {
-//             $unfinishedattemptid = $unfinishedattempt->id;
-//             $unfinished = $unfinishedattempt->state == quiz_attempt::IN_PROGRESS;
-            
-//             if ($unfinished) {
-//                 echo '<br><br><br> Creating override <br>';
-//                 $this->create_user_override($cmid, $quiz);
-//             }
-//         }
-        
-        return false;
-    }
-/*
-    public function setup_attempt_page($page) {
-        global $CFG, $PAGE, $_SESSION, $DB, $USER, $HBCFG;
 
-        // User details.
-        $sessionkey = sesskey();
-        $userid     = $USER->id;
-        $username   = $USER->username;
-        
-        $quiz       = $this->quizobj->get_quiz();
-        $quizid     = $this->quizobj->get_quizid();
-        $cmid       = $this->quizobj->get_cmid();
-        
-        
-        if ($unfinishedattempt = quiz_get_user_attempt_unfinished($quiz->id, $USER->id)) {
-            $unfinishedattemptid = $unfinishedattempt->id;
-            $unfinished = $unfinishedattempt->state == quiz_attempt::IN_PROGRESS;
-            
-            
-            //             $script = " <script>
-            // 			            function findButtonText() {
-            // 					        $(document).ready(function() {
-                
-                //                 				if(document.getElementByClass('singlebutton quizstartbuttondiv')) {
-                
-                //                 				}
-                //     				        });
-                // 					    }
-                // 				        </script>";
-                //             $script .= "<script type='text/javascript'>countDownTimer($diffMilliSecs);</script>";
-            
-            if ($unfinished) {
-                echo '<br><br><br> Setup attempt <br>';
-                $this->create_user_override($cmid, $quiz);
-            }
-        }
-    }
-*/
     protected function create_user_override($cmid, $quiz, $unfinishedattempt, $state = null) {
         global $DB, $CFG, $USER;
 
@@ -172,88 +103,30 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
         $override   = null;
         $userid     = $USER->id;
        
-        
-        // Add or edit an override.
-//         require_capability('mod/quiz:manageoverrides', $context);
-
-        // Creating a new override.
-//         $data = new stdClass();
-
-        // Merge quiz defaults with data.
-//         $keys = array('timeopen', 'timeclose', 'timelimit', 'attempts', 'password');
-//         foreach ($keys as $key) {
-//             if (!isset($data->{$key}) || $reset) {
-//                 $data->{$key} = $quiz->{$key};
-//             }
-//         }
-
-        // True if group-based override.
-        //         $action = null;require_once($CFG->dirroot . '/config.php');
         require_once($CFG->dirroot . '/mod/quiz/lib.php');
         require_once($CFG->dirroot . '/mod/quiz/locallib.php');
-//         $groupmode = !empty($data->groupid) || ($action === 'addgroup' && empty($overrideid));
 
-        // Setup the form data required for processing as in overrideedit.php file.
-//         $override = new stdClass();
-// //         $override->action = 'adduser';
-//         $override->cmid = $cmid;
-//         $override->quiz = $quiz->id;
-// //         $override->_qf__quiz_override_form = 1;
-// //         $override->mform_isexpanded_id_override = 1;
-//         $override->userid = '';
-//         $override->password = '';
-//         $override->timeopen = $quiz->timeopen;
-//         $override->timeclose = $quiz->timeclose;
-//         $override->timelimit = 60;
-//         $override->attempts = $quiz->attempts;
-// //         $override->submitbutton = 'Save';
-
-//         $dataobj = new timelimitoverride();
-
-//         if($state === 'finished') {
-//             // $dataobj->reset_timelimit_override($cmid, $roomid, $override, $quiz);
-//         } else {
-// //             echo '<br>-- in create ovrrde --<br>';
-// //             print_object($quiz);
-//             $dataobj->create_timelimit_override($cmid, $roomid, $override, $quiz);
-//         }
-        
-        //=====================================================================
-        
         // Setup the form data required for processing as in overrideedit.php file.
         $fromform = new stdClass();
-        //         $fromform->action = 'adduser';
         $fromform->cmid = $cmid;
-        $fromform->quiz = $quiz->id;
-        //         $fromform->_qf__quiz_override_form = 1;
-        //         $fromform->mform_isexpanded_id_override = 1;
-        $fromform->userid = '';
-        $fromform->password = '';
-        $fromform->timeopen = $quiz->timeopen;
-//         if($quiz->timeclose){
+
+        $fromform->timeopen = null;
+        
         $timeclose = $quiz->timeclose + 60;
         $fromform->timeclose = $timeclose;
-//         } else {
-//             $fromform->timeclose = $quiz->timeclose;
-//         }
+        
         $timelimit = $quiz->timelimit + 60;
         $fromform->timelimit = $timelimit;
-        $fromform->attempts = $quiz->attempts;
         
-//         $transaction = $DB->start_delegated_transaction();
+        $fromform->attempts = null;
+        $fromform->password = null;
         
-        //=====================================================================
         // Process the data.
-//         $fromform->quiz = $quiz->id;
+        $fromform->quiz = $quiz->id;
         $fromform->userid = $userid;
         
         // Replace unchanged values with null.
         $keys = array('timeopen', 'timeclose', 'timelimit', 'attempts', 'password');
-        foreach ($keys as $key) {
-            if ($fromform->{$key} == $quiz->{$key}) {
-                $fromform->{$key} = null;
-            }
-        }
         
         // See if we are replacing an existing override.
         $userorgroupchanged = false;
@@ -362,101 +235,8 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
 //          $DB->execute($sql);
         //quiz_update_open_attempts(array('userid'=>$userid, 'quizid'=>$quiz->id));
         
-        /*
-        $sql = "UPDATE {quiz_attempts} quiza
-                        JOIN {quiz} quiz ON quiz.id = quiza.quiz
-                        JOIN ( 
-          SELECT iquiza.id,
-           COALESCE(MAX(quo.timeclose), MAX(qgo1.timeclose), MAX(qgo2.timeclose), iquiz.timeclose) AS usertimeclose,
-           COALESCE(MAX(quo.timelimit), MAX(qgo3.timelimit), MAX(qgo4.timelimit), iquiz.timelimit) AS usertimelimit
-
-           FROM {quiz_attempts} iquiza
-           JOIN {quiz} iquiz ON iquiz.id = iquiza.quiz
-      LEFT JOIN {quiz_overrides} quo ON quo.quiz = iquiza.quiz AND quo.userid = iquiza.userid
-      LEFT JOIN {quiz_overrides} qgo1 ON qgo1.quiz = iquiza.quiz AND qgo1.timeclose = 0
-      LEFT JOIN {quiz_overrides} qgo2 ON qgo2.quiz = iquiza.quiz AND qgo2.timeclose > 0
-      LEFT JOIN {quiz_overrides} qgo3 ON qgo3.quiz = iquiza.quiz AND qgo3.timelimit = 0
-      LEFT JOIN {quiz_overrides} qgo4 ON qgo4.quiz = iquiza.quiz AND qgo4.timelimit > 0
-          WHERE iquiza.state IN ('inprogress', 'overdue')
-                AND iquiza.userid = :iuid3
-                AND iquiza.quiz = :iqid5
-       GROUP BY iquiza.id, iquiz.id, iquiz.timeclose, iquiz.timelimit ) quizauser ON quizauser.id = quiza.id
-                         SET quiza.timecheckstate = 
-          CASE WHEN quizauser.usertimelimit = 0 AND quizauser.usertimeclose = 0 THEN NULL
-               WHEN quizauser.usertimelimit = 0 THEN quizauser.usertimeclose
-               WHEN quizauser.usertimeclose = 0 THEN quiza.timestart + quizauser.usertimelimit
-               WHEN quiza.timestart + quizauser.usertimelimit < quizauser.usertimeclose THEN quiza.timestart + quizauser.usertimelimit
-               ELSE quizauser.usertimeclose END +
-          CASE WHEN quiza.state = 'overdue' THEN quiz.graceperiod ELSE 0 END
-                       WHERE quiza.state IN ('inprogress', 'overdue')
-                         AND quiza.userid = :uid2
-                         AND quiza.quiz = :qid4";
-        
-        $params = array("uid2" => $userid,
-                        "iuid3" => $userid,
-                        "qid4" => $quiz->id,
-                        "iqid5" => $quiz->id);        
-        $DB->execute($sql, $params);
-        */
-        
-        
-        
-//         $newsql = "UPDATE {quiz_attempts} quiza
-//                         SET quiza.timecheckstate = 
-//                         CASE WHEN $quiz->timeclose = 0 THEN quiza.timestart + $timelimit
-//                              WHEN quiza.timestart + $timelimit < $quiz->timeclose THEN quiza.timestart + $timelimit
-//                              WHEN quiza.timestart + $timelimit > $quiz->timeclose THEN $quiz->timeclose + ($quiz->timeclose - ($quiz->timestart + $timelimit))
-//                              ELSE $quiz->timeclose END +
-//                         CASE WHEN quiza.state = 'overdue' THEN $quiz->graceperiod ELSE 0 END
-//                             WHERE quiza.state IN ('inprogress', 'overdue')
-//                               AND quiza.userid = $userid
-//                               AND quiza.quiz = $quiz->id ORDER BY quiza.id desc LIMIT 1";
-//         $DB->execute($newsql);
-
-        
-//         echo '<br>-----------quiz-------------';
-//         print_object($quiz);
-        //===================================================================
-        /*
-        echo '<br>before tcs - ' . $unfinishedattempt->timecheckstate;
-        $quiza = $unfinishedattempt;
-        
-        if($quiz->timeclose == 0) {
-//             echo 'in here 1';
-            $timecheckstate = $quiza->timestart + $timelimit;
-            
-        } else if (($quiza->timestart + $timelimit) < $quiz->timeclose) {
-//             echo 'in here 2';
-            $timecheckstate = $quiza->timestart + $timelimit;
-            
-        } else if (($quiza->timestart + $timelimit) > $quiz->timeclose) {
-            echo '<br>in here 3';
-//             echo '<br>ts - ' . $quiza->timestart;
-//             echo '<br>tc - ' . $quiza->timefinish;
-//             echo '<br>tl - ' . $timelimit;
-//             echo '<br>tclose - ' . $quiz->timeclose;
-//             echo '<br>topen - ' . $quiz->timeopen;
-//             $timecheckstate = $quiza->timestart + $timelimit;
-            $timecheckstate = $quiz->timeclose + ($quiz->timeclose - ($quiza->timestart + $timelimit));
-            echo '<br>after tcs1 - ' . $timecheckstate;
-            
-        } else {
-//             echo 'in here 4';
-            $timecheckstate = $quiz->timeclose;
-            
-        }
-            
-        if($quiza->state == 'overdue') {
-            $timecheckstate += $quiz->graceperiod;
-        }
-         
-        $quiza->timecheckstate = $timecheckstate;
-        $DB->update_record('quiz_attempts', $quiza);
-        echo '<br>after tcs2 - ' . date('d m Y g:i a',$quiza->timecheckstate);
-        */
-        //======================================================================
-        $timecheckstate = $quiza->timestart + $timelimit;
-        $DB->set_field('quiz_attempts', 'timecheckstate', $time, array('id' => $unfinishedattempt->id));
+        $timecheckstate = $unfinishedattempt->timestart + $timelimit;
+        $DB->set_field('quiz_attempts', 'timecheckstate', $timecheckstate, array('id' => $unfinishedattempt->id));
         
 //          $sql = "COMMIT";
 //          $DB->execute($sql);
@@ -469,20 +249,7 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
 //         } else {
             // User override. We only need to update the calendar event for this user override.
             quiz_update_events($quiz, $fromform);
-//         }
-        
-//         if (!empty($fromform->submitbutton)) {
-//             redirect($overridelisturl);
-//         }
-        
-//         // The user pressed the 'again' button, so redirect back to this page.
-//         $url->remove_params('cmid');
-//         $url->param('action', 'duplicate');
-//         $url->param('id', $fromform->id);
-//         redirect($url);
-
-//         $transaction->allow_commit();
-                   
+//         }           
     }
     
    
@@ -495,16 +262,6 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
                     0 => get_string('notrequired', 'quizaccess_overridedemo'),
                     1 => get_string('odrequiredoption', 'quizaccess_overridedemo')
                 ));
-            
-            //         $hbmonsettingsarray[] = $mform->createElement('advcheckbox', 'allowifunassigned', '', 'Allow Unmapped', '', array(0, 1));
-            //         $mform->disabledIf('allowifunassigned', 'hbmonrequired', 'neq', 1);
-            
-//             $radioarray = array();
-//             $hbmonsettingsarray[]= $mform->createElement('radio', 'hbmonmode', '', get_string('automatic', 'quizaccess_heartbeatmonitor'), 1);
-//             $hbmonsettingsarray[]= $mform->createElement('radio', 'hbmonmode', '', get_string('manual', 'quizaccess_heartbeatmonitor'), 0);
-//             //         $mform->addGroup($radioarray, 'radioar', '', array(' '), false);
-//             //         $hbmonsettingsarray[] = $radioarray;
-//             $mform->disabledIf('hbmonmode', 'hbmonrequired', 'neq', 1);
             
             $mform->addGroup($odsettingsarray, 'enableod', get_string('odrequired', 'quizaccess_overridedemo'), array(' '), false);
             $mform->addHelpButton('enableod', 'odrequired', 'quizaccess_overridedemo');
@@ -529,17 +286,14 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
                 $record = new stdClass();
                 $record->quizid = $quiz->id;
                 $record->odrequired = 1;
-//                 $record->hbmonmode = $quiz->hbmonmode;
                 $DB->insert_record('quizaccess_enable_od', $record);
             } else {
                 $select = "quizid = $quiz->id";
                 $id = $DB->get_field_select('quizaccess_enable_od', 'id', $select);
-//                 $oldrecord = $DB->get_record('quizaccess_enable_od', $select);
                 
                 $record = new stdClass();
                 $record->id = $id;
                 $record->odrequired = $quiz->odrequired;
-//                 $record->hbmonmode = $quiz->hbmonmode;
                 $DB->update_record('quizaccess_enable_od', $record);
             }
         }
