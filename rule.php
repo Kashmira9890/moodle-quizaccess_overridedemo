@@ -122,20 +122,19 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
             quiz_delete_override($quiz, $oldoverride->id);
         }
     
-        // Set the common parameters for one of the events we may be triggering.
+        //unset($override->id);
+        $override->id = $DB->insert_record('quiz_overrides', $override);
+
+        // Parameters for events we may be triggering.
         $params = array(
             'context' => $context,
             'other' => array(
                 'quizid' => $quiz->id
-            )
+            ),
+            'objectid' => $override->id,
+            'relateduserid' => $override->userid
         );
         
-        //unset($override->id);
-        $override->id = $DB->insert_record('quiz_overrides', $override);
-
-        // Override created event to be fired.
-        $params['objectid'] = $override->id;
-        $params['relateduserid'] = $override->userid;
         $event = \mod_quiz\event\user_override_created::create($params);
 
         // Trigger the override created event.
