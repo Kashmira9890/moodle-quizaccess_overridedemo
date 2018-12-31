@@ -98,8 +98,8 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
         global $DB, $CFG, $USER;
 
         $context    = context_module::instance($cmid);
-        $groupmode  = null;
-        $action     = null;
+//         $groupmode  = null;
+//         $action     = null;
         $override   = null;
         $userid     = $USER->id;
        
@@ -129,21 +129,23 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
         $keys = array('timeopen', 'timeclose', 'timelimit', 'attempts', 'password');
         
         // See if we are replacing an existing override.
-        $userorgroupchanged = false;
-        if (empty($override->id)) {
-            $userorgroupchanged = true;
-        } else if (!empty($fromform->userid)) {
-            $userorgroupchanged = $fromform->userid !== $override->userid;
-        } else {
-            $userorgroupchanged = $fromform->groupid !== $override->groupid;
-        }
+//         $userorgroupchanged = false;
+//         if (empty($override->id)) {
+//             $userorgroupchanged = true;
+//         } else if (!empty($fromform->userid)) {
+//             $userorgroupchanged = $fromform->userid !== $override->userid;
+//         } else {
+//             $userorgroupchanged = $fromform->groupid !== $override->groupid;
+//         }
         
-        if ($userorgroupchanged) {
+//         if ($userorgroupchanged) {
             $conditions = array(
                 'quiz' => $quiz->id,
-                'userid' => empty($fromform->userid)? null : $fromform->userid,
-                'groupid' => empty($fromform->groupid)? null : $fromform->groupid);
+                'userid' => empty($fromform->userid)? null : $fromform->userid);
+//                 'groupid' => empty($fromform->groupid)? null : $fromform->groupid);
             if ($oldoverride = $DB->get_record('quiz_overrides', $conditions)) {
+                echo '<br>===================merge override===============<br>';
+                
                 // There is an old override, so we merge any new settings on top of
                 // the older override.
                 foreach ($keys as $key) {
@@ -163,7 +165,7 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
 //                 $sql = "UNLOCK TABLES";
 //                 $DB->execute($sql);
             }
-        }
+//         }
         
         // Set the common parameters for one of the events we may be triggering.
         $params = array(
@@ -174,7 +176,7 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
         );
         
         if (!empty($override->id)) {
-                        
+            echo '<br>===================update override===============<br>';
             $fromform->id = $override->id;
       
 //             $sql = "LOCK TABLE {quiz_overrides} WRITE";
@@ -185,18 +187,18 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
                     
             // Determine which override updated event to fire.
             $params['objectid'] = $override->id;
-            if (!$groupmode) {
+//             if (!$groupmode) {
                 $params['relateduserid'] = $fromform->userid;
                 $event = \mod_quiz\event\user_override_updated::create($params);
-            } else {
-                $params['other']['groupid'] = $fromform->groupid;
-                $event = \mod_quiz\event\group_override_updated::create($params);
-            }
+//             } else {
+//                 $params['other']['groupid'] = $fromform->groupid;
+//                 $event = \mod_quiz\event\group_override_updated::create($params);
+//             }
             
             // Trigger the override updated event.
             $event->trigger();
-        } 
-        else {
+        } else { 
+            echo '<br>===================insert override===============<br>';
             unset($fromform->id);
 
 //             $sql = "LOCK TABLE {quiz_overrides} WRITE";
@@ -207,13 +209,13 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
             
             // Determine which override created event to fire.
             $params['objectid'] = $fromform->id;
-            if (!$groupmode) {
+//             if (!$groupmode) {
                 $params['relateduserid'] = $fromform->userid;
                 $event = \mod_quiz\event\user_override_created::create($params);
-            } else {
-                $params['other']['groupid'] = $fromform->groupid;
-                $event = \mod_quiz\event\group_override_created::create($params);
-            }
+//             } else {
+//                 $params['other']['groupid'] = $fromform->groupid;
+//                 $event = \mod_quiz\event\group_override_created::create($params);
+//             }
             
             // Trigger the override created event.
             $event->trigger();
