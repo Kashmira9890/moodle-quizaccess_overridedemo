@@ -85,12 +85,16 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
         $override->cmid = $cmid;
 
         $override->timeopen = null;
-        
-        $timeclose = $quiz->timeclose + 60;
-        $override->timeclose = $timeclose;
-        
+               
         $timelimit = $quiz->timelimit + 60;
         $override->timelimit = $timelimit;
+        
+        if (($unfinishedattempt->timestart + $timelimit) > $quiz->timeclose) {
+            $timeclose = $quiz->timeclose + 60;
+            $override->timeclose = $timeclose;
+        } else {
+            $override->timeclose = null;
+        }
         
         $override->attempts = null;
         $override->password = null;
@@ -137,6 +141,7 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
         // Trigger the override created event.
         $event->trigger();
 
+        // Update timecheckstate (as in quiz_update_open_attempts()).
         $timecheckstate = $unfinishedattempt->timestart + $timelimit;
         $DB->set_field('quiz_attempts', 'timecheckstate', $timecheckstate, array('id' => $unfinishedattempt->id));
 
