@@ -40,7 +40,7 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class quizaccess_overridedemo extends quiz_access_rule_base {
-    
+
     public static function make(quiz $quizobj, $timenow, $canignoretimelimits) {
         if (empty($quizobj->get_quiz()->odrequired)) {
             return null;
@@ -49,25 +49,51 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
     }
 
     public function prevent_access() {
+//     public function end_time($attempt) {
         global $CFG, $PAGE, $DB, $USER;
-        
+//         echo '<br><br><br> Prevent access <br>';
+        echo '<br><br><br> in prev acc <br>';
         // User details.
         $sessionkey = sesskey();
         $userid     = $USER->id;
         $username   = $USER->username;
-        
+
         $quiz       = $this->quizobj->get_quiz();
         $quizid     = $this->quizobj->get_quizid();
         $cmid       = $this->quizobj->get_cmid();
-        
-        if ($unfinishedattempt = quiz_get_user_attempt_unfinished($quiz->id, $USER->id)) {
-            $unfinishedattemptid = $unfinishedattempt->id;
-            $unfinished = $unfinishedattempt->state == quiz_attempt::IN_PROGRESS;
-                            
-            if ($unfinished) {
-                echo '<br><br><br> Prevent access <br>'; 
-                $this->create_user_override($cmid, $quiz, $unfinishedattempt);
+
+        echo '<br> time() ' . time();
+
+//         if(isset($attempt->hite)) {
+//             echo '<br> hite ' . time();
+
+            if ($unfinishedattempt = quiz_get_user_attempt_unfinished($quiz->id, $USER->id)) {
+                echo '<br> in unfin prev ac ';
+//                 if(isset($unfinishedattempt->hite)) {
+                if (!empty($_SESSION['contod'])) {
+                    echo '<br> sess pa ' . $_SESSION['contod'];
+                    echo '<br> create ovrd ';
+                print_object($unfinishedattempt);
+                $unfinishedattemptid = $unfinishedattempt->id;
+                $unfinished = $unfinishedattempt->state == quiz_attempt::IN_PROGRESS;
+
+                if ($unfinished) {
+                    echo '<br><br><br> Prevent access <br>';
+                    $this->create_user_override($cmid, $quiz, $unfinishedattempt);
+                    $_SESSION['contod'] = false;
+                }
             }
+            //======================
+            /*
+            $timelimit1 = time() + $quiz->timelimit - $unfinishedattempt->timemodified;
+            $timeclose1 = $unfinishedattempt->timestart + $timelimit1;
+//             return (time() + 60);
+            return $timeclose1;
+//             return false;
+        }
+//         return false;
+        return $unfinishedattempt->timestart + $this->quiz->timelimit;
+        //======================*/
         }
     }
 
@@ -76,7 +102,7 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
 
         $context    = context_module::instance($cmid);
         $userid     = $USER->id;
-       
+
         require_once($CFG->dirroot . '/mod/quiz/lib.php');
         require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 
@@ -85,29 +111,32 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
         $override->cmid = $cmid;
 
         $override->timeopen = null;
-               
-        $timelimit = $quiz->timelimit + 60;
-        $override->timelimit = $timelimit;
-        
+
+        $timelimit = $quiz->timelimit + 180;
+        $timelimit2 = (time() + $quiz->timelimit) - ($unfinishedattempt->timemodified);
+        $override->timelimit = $timelimit2;
+        echo '<br> new timelimit ' . $timelimit2;
+
         if (($unfinishedattempt->timestart + $timelimit) > $quiz->timeclose) {
-            $timeclose = $quiz->timeclose + 60;
+//             $timeclose = $quiz->timeclose + 60;
+            $timeclose = $unfinishedattempt->timestart + $timelimit;
             $override->timeclose = $timeclose;
         } else {
             $override->timeclose = null;
         }
-        
+
         $override->attempts = null;
         $override->password = null;
-        
+
         // Process the data.
         $override->quiz = $quiz->id;
         $override->userid = $userid;
-              
+
         // See if we are replacing an existing override.
         $conditions = array(
             'quiz' => $quiz->id,
             'userid' => empty($override->userid)? null : $override->userid);
-        if ($oldoverride = $DB->get_record('quiz_overrides', $conditions)) {                
+        if ($oldoverride = $DB->get_record('quiz_overrides', $conditions)) {
             // There is an old override, so we merge any new settings on top of
             // the older override.
             $keys = array('timeopen', 'timeclose', 'timelimit', 'attempts', 'password');
@@ -118,10 +147,10 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
             }
             // Set the course module id before calling quiz_delete_override().
             $quiz->cmid = $cmid;
-            
+
             quiz_delete_override($quiz, $oldoverride->id);
         }
-    
+
         //unset($override->id);
         $override->id = $DB->insert_record('quiz_overrides', $override);
 
@@ -134,45 +163,100 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
             'objectid' => $override->id,
             'relateduserid' => $override->userid
         );
-        
+
         $event = \mod_quiz\event\user_override_created::create($params);
 
         // Trigger the override created event.
         $event->trigger();
 
         // Update timecheckstate (as in quiz_update_open_attempts()).
-        $timecheckstate = $unfinishedattempt->timestart + $timelimit;
+        $timecheckstate = $unfinishedattempt->timestart + $timelimit2;
+        echo '<br> tcs prev acc ' . $timecheckstate;
         $DB->set_field('quiz_attempts', 'timecheckstate', $timecheckstate, array('id' => $unfinishedattempt->id));
 
         // User override. We only need to update the calendar event for this user override.
         quiz_update_events($quiz, $override);
+//         $timeclose = $unfinishedattempt->timestart + $timelimit;
+//         return $timeclose;
     }
-    
-   
+
+    public function end_time($attempt) {
+        echo '<br>ts ' . $attempt->timestart;
+        echo '<br>tl ' . $this->quiz->timelimit;
+        echo '<br>tm ' . $attempt->timemodified;
+        echo '<br><br><br> end time <br>';
+
+        /*
+        if(isset($attempt->timecheckstate)){
+            echo '<br>tcs ' . $attempt->timecheckstate;
+
+            echo '<br>===========atmpt============== ';
+            print_object($attempt);
+//             echo '<br>===========this=============== ';
+//             print_object($this);
+
+            echo '<br>diff ' . ($attempt->timecheckstate - $attempt->timemodified);
+            echo '<br>time() ' . time();
+//             $attempt->timestart + $this->quiz->timelimit
+//             time() + ($attempt->timecheckstate - $attempt->timemodified)
+            return $extratime = time() + ($attempt->timecheckstate - $attempt->timemodified);
+        }
+        echo '<br>add ' . ($attempt->timestart + $this->quiz->timelimit);
+        return $attempt->timestart + $this->quiz->timelimit;
+
+//         $time = 1546439400;
+//         return $time;
+*/
+        //============================================================
+        $attempt->odflag = false;
+
+        if (isset($attempt->hite)) {
+            $timelimit1 = time() + $this->quiz->timelimit - $attempt->timemodified;
+            $timeclose1 = $attempt->timestart + $timelimit1;
+            $attempt->odflag = true;
+            return $timeclose1;
+        }
+        return $attempt->timestart + $this->quiz->timelimit;
+    }
+/*
+    public function time_left_display($attempt, $timenow) {
+        // If this is a teacher preview after the time limit expires, don't show the time_left
+        echo '<br>tcs2 ' . $attempt->timecheckstate;
+        $endtime = $this->end_time($attempt);
+        if ($attempt->preview && $timenow > $endtime) {
+            return false;
+        }
+        return $endtime - $timenow;
+    }
+*/
+    public function get_superceded_rules() {
+        return array('timelimit');
+    }
+
     public static function add_settings_form_fields(
         mod_quiz_mod_form $quizform, MoodleQuickForm $mform) {
             $odsettingsarray   = array();
-            
+
             $odsettingsarray[] = $mform->createElement('select', 'odrequired',
                 get_string('odrequired', 'quizaccess_overridedemo'), array(
                     0 => get_string('notrequired', 'quizaccess_overridedemo'),
                     1 => get_string('odrequiredoption', 'quizaccess_overridedemo')
                 ));
-            
+
             $mform->addGroup($odsettingsarray, 'enableod', get_string('odrequired', 'quizaccess_overridedemo'), array(' '), false);
             $mform->addHelpButton('enableod', 'odrequired', 'quizaccess_overridedemo');
             $mform->setAdvanced('enableod', true);
     }
-    
+
     public static function validate_settings_form_fields(array $errors,
         array $data, $files, mod_quiz_mod_form $quizform) {
             return $errors;
     }
-    
+
     public static function get_browser_security_choices() {
         return array();
     }
-    
+
     public static function save_settings($quiz) {
         global $DB;
         if (empty($quiz->odrequired)) {
@@ -186,7 +270,7 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
             } else {
                 $select = "quizid = $quiz->id";
                 $id = $DB->get_field_select('quizaccess_enable_od', 'id', $select);
-                
+
                 $record = new stdClass();
                 $record->id = $id;
                 $record->odrequired = $quiz->odrequired;
@@ -194,12 +278,12 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
             }
         }
     }
-    
+
     public static function delete_settings($quiz) {
         global $DB;
         $DB->delete_records('quizaccess_enable_od', array('quizid' => $quiz->id));
     }
-    
+
     public static function get_settings_sql($quizid) {
         return array(
             'odrequired',
@@ -207,9 +291,9 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
             array()
         );
     }
-    
+
     public static function get_extra_settings($quizid) {
         return array();
     }
-    
+
 }
