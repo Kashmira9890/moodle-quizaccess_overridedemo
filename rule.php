@@ -55,17 +55,23 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
 
 
 //     public function is_preflight_check_required($attemptid) {
-//         Warning only required if the attempt is not already started.
-//                 return $attemptid === null;
+//         // Warning only required if the attempt is not already started.
+//         echo '<br><br><br>in ispfl()----------';
+//         echo '<br>quiz->timelimit1 ' . $this->quiz->timelimit;
+//         print_object($this);
+
+//         return $attemptid === null;
 //         return true;
 //     }
+
 //     public function add_preflight_check_form_fields(mod_quiz_preflight_check_form $quizform,
 //             MoodleQuickForm $mform, $attemptid) {
+//     public function prevent_access() {
+    public function end_time($attempt) {
 
-
-    public function prevent_access() {
-//     public function end_time($attempt) {
         global $CFG, $PAGE, $DB, $USER;
+//         $mform = null;
+//         $quizform = null;
 //         echo '<br><br><br> Prevent access <br>';
         echo '<br><br><br> in prev acc <br>';
         // User details.
@@ -78,14 +84,19 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
         $cmid       = $this->quizobj->get_cmid();
 
         echo '<br> time() ' . time();
-
+        echo '<br> quiz timelimit ' . $quiz->timelimit;
+        $deadtime = time() - $attempt->timemodified;
+        if($deadtime > 30) {
+            $this->create_user_override($cmid, $quiz, $attempt);
+        }
+/*
     //         if(isset($attempt->hite)) {                  // for end_time() .. no use ..
 //             echo '<br> hite ' . time();
-
+        if ($attemptid != null) {
             if ($unfinishedattempt = quiz_get_user_attempt_unfinished($quiz->id, $USER->id)) {
                 echo '<br> in unfin prev ac ';
 //                 if(isset($unfinishedattempt->hite)) {    // for end_time() .. no use .. end_time is called twice
-                if (!empty($_SESSION['contod'])) {                      // for prev_acc() .. coz cr_u_ovrd() needs to be executed only once
+//                 if (!empty($_SESSION['contod'])) {                      // for prev_acc() .. coz cr_u_ovrd() needs to be executed only once
                     echo '<br> sess pa ' . $_SESSION['contod'];         // for prev_acc() ..
                     echo '<br> create ovrd ';
                 print_object($unfinishedattempt);
@@ -93,11 +104,13 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
                 $unfinished = $unfinishedattempt->state == quiz_attempt::IN_PROGRESS;
 
                 if ($unfinished) {
+
                     echo '<br><br><br> Prevent access <br>';
                     $this->create_user_override($cmid, $quiz, $unfinishedattempt);
-                    $_SESSION['contod'] = false;
-                }
+//                     $_SESSION['contod'] = false;
+//                 }
             }
+            }*/
             //======================
             /*  // for end_time() ..
             $timelimit1 = time() + $quiz->timelimit - $unfinishedattempt->timemodified;
@@ -109,8 +122,10 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
 //         return false;
         return $unfinishedattempt->timestart + $this->quiz->timelimit;
         //======================*/
-        }
-//         return false;                                                // for is_prefl() ..
+//         }
+//         return false;                                               // for is_prefl() ..
+//         return $attemptid === null;                                    // for is_prefl() ..
+        return $attempt->timestart + $this->quiz->timelimit;
     }
 
     protected function create_user_override($cmid, $quiz, $unfinishedattempt, $state = null) {
@@ -129,12 +144,23 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
         $override->timeopen = null;
 
 //         $timelimit = $quiz->timelimit + 180;
-//         $timelimit2 = (time() + $quiz->timelimit) - ($unfinishedattempt->timemodified);
-//         $override->timelimit = $timelimit2;
-//         echo '<br> new timelimit ' . $timelimit2;
-        $timelimit2 = $quiz->timelimit;
-        $override->timelimit = $quiz->timelimit;
-        echo '<br> new timelimit ' . $quiz->timelimit;
+        $timelimit2 = (time() + $quiz->timelimit) - ($unfinishedattempt->timemodified);
+        // only if deadtime > 30;  timelimit2 > quiz->timelimit + 30
+        echo '<br>timelimit2 ' . $timelimit2;
+
+//         if ($timelimit2 > ($quiz->timelimit + 60)) {
+            $quiz->timelimit = $timelimit2;
+            echo '<br> quiz - timelimit ' . $quiz->timelimit;
+            $override->timelimit = $timelimit2;
+            echo '<br> new timelimit ' . $timelimit2;
+//         } else {
+//             $override->timeclose = null;
+//         }
+
+        // if timelimit is already modified (in end_time())
+//         $timelimit2 = $quiz->timelimit;
+//         $override->timelimit = $quiz->timelimit;
+//         echo '<br> new timelimit ' . $quiz->timelimit;
 
 
         if (($unfinishedattempt->timestart + $timelimit2) > $quiz->timeclose) {
@@ -147,6 +173,17 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
 
         $override->attempts = null;
         $override->password = null;
+
+//         $flag = false;
+//         $keys = array('timeopen', 'timeclose', 'timelimit', 'attempts', 'password');
+//         foreach ($keys as $key) {
+//             if (isset($override->{$key})) {
+//                 $flag = true;
+//             }
+//         }
+//         if (!$flag) {
+//             return;
+//         }
 
         // Process the data.
         $override->quiz = $quiz->id;
@@ -199,7 +236,7 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
 //         $timeclose = $unfinishedattempt->timestart + $timelimit;
 //         return $timeclose;
     }
-
+/*
     public function end_time($attempt) {
         echo '<br>ts ' . $attempt->timestart;
         echo '<br>tl ' . $this->quiz->timelimit;
@@ -229,21 +266,33 @@ class quizaccess_overridedemo extends quiz_access_rule_base {
 */
         //============================================================
 //         $attempt->odflag = false;
-        echo '<br><br><br>----------before hite end time';
-        if (isset($attempt->hite)) {
-            echo '<br><br><br>----------in hite end time';
-            $timelimit1 = (time() + $this->quiz->timelimit) - $attempt->timemodified;
-            //=================check if this works=======
-            //do it separately : set $this->qtl n createovd() also
-            //either here or immdtly after createovd() .. for displaying new tl during contatmpt is rendered ..
-            $this->quiz->timelimit = $timelimit1;
-            //===========================================
-            $timeclose1 = $attempt->timestart + $timelimit1;
-//             $attempt->odflag = true;
-            return $timeclose1;
-        }
-        return $attempt->timestart + $this->quiz->timelimit;
+//         echo '<br><br><br>----------before hite end time';
+//         if (isset($attempt->hite)) {
+//             echo '<br><br><br>----------in hite end time';
+//             $timelimit1 = (time() + $this->quiz->timelimit) - $attempt->timemodified;
+//             //=================check if this works=======
+//             //do it separately : set $this->qtl n createovd() also
+//             //either here or immdtly after createovd() .. for displaying new tl during contatmpt is rendered ..
+//             $this->quiz->timelimit = $timelimit1;
+//             //===========================================
+//             $timeclose1 = $attempt->timestart + $timelimit1;
+// //             $attempt->odflag = true;
+// //             return $timeclose1;
+//         }
+
+
+
+//         return $attempt->timestart + $this->quiz->timelimit;
+//     }
+
+    public function add_preflight_check_form_fields(mod_quiz_preflight_check_form $quizform,
+            MoodleQuickForm $mform, $attemptid) {
+                $mform->addElement('header', 'honestycheckheader',
+                        get_string('confirmstartheader', 'quizaccess_timelimit'));
+                $mform->addElement('static', 'honestycheckmessage', '',
+                        get_string('confirmstart', 'quizaccess_timelimit', format_time($this->quiz->timelimit)));
     }
+
 /*
     public function time_left_display($attempt, $timenow) {
         // If this is a teacher preview after the time limit expires, don't show the time_left
